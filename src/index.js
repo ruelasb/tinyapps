@@ -39,11 +39,18 @@ class Board extends React.Component {
 	  for (var row = 0; row < 3; row++) {
 		for (var i = 0; i < 3; i++) {
 		  var enumerator = (row*3)+i;//enumerates numbers from 1-9 and serves as the key in renderSquare.
-		    if (this.props.winningLine){
-		    //if the winning line matches the key number then add the highlight.	
-		      var highlight = this.props.winningLine[i] === enumerator ? {backgroundColor: 'red'} : {backgroundColor: 'none'};
+		    if (this.props.winningLine){	
+		    	//compare enumerator 3 times, once for every key/value pair in winningLine.
+		    	for (var y = 0; y < 3; y++){
+		    	 //if the winning line matches the enumerator then add the highlight.
+		          if (this.props.winningLine[y] === enumerator){
+		         	var highlight = {backgroundColor: 'red'}
+		          };
+		        }
 		    }
 		  renderSquareContainer.push(this.renderSquare(enumerator, highlight))//fill container with 3 calls.
+		  //must reset highlight after the renderSquare grabs the highlight value.
+		  highlight = null;
 		}
 		divContainer.push(<div key={row} className="board-row">{renderSquareContainer}</div>);
 		renderSquareContainer = [];//clear container for next 3 calls.
@@ -54,7 +61,6 @@ class Board extends React.Component {
 	render() {
 	  return (
 	    <div>
-	      <div className="status">{status}</div>
 	      {this.gridBuilder()}
 	    </div>
 	  );
