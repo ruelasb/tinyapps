@@ -3,6 +3,8 @@ import ReactDOM from 'react-dom';
 import App from './App';
 import './index.css';
 
+
+
 class ProductCategoryRow extends React.Component {
   render(){
     return (
@@ -35,6 +37,7 @@ class ProductTable extends React.Component {
       }
       if(product.category !== lastCategory){
         rows.push(<ProductCategoryRow category={product.category} key={product.category} />);
+        console.log(rows);
       }
       rows.push(<ProductRow product={product} key={product.name}/>);
       lastCategory = product.category;
@@ -97,7 +100,8 @@ class FilterableProductTable extends React.Component {
 
     this.state = {
       filterText: '',
-      inStockOnly: false
+      inStockOnly: false,
+      addProduct: [{category: 'Sporting Goods', price: '$5.99', stocked: true, name: 'Soccerball'},]
     }
 
     this.handleUserInput = this.handleUserInput.bind(this);
@@ -109,6 +113,23 @@ class FilterableProductTable extends React.Component {
       inStockOnly: inStockOnly
     })
   }
+
+  componentWillMount(){
+  	const addProduct = this.state.addProduct.slice();
+  	this.props.onAdd(addProduct[addProduct.length - 1]);
+  }
+
+  sortCategory(a,b){
+    var catA = a.category.toLowerCase();
+    var catB = b.category.toLowerCase();
+    if(catA < catB){
+      return 1
+    }
+    if (catA > catB){
+      return -1
+    }
+      return 0
+   }
   
   render(){
     return(
@@ -118,7 +139,7 @@ class FilterableProductTable extends React.Component {
           inStockOnly={this.state.inStockOnly}
           onUserInput={this.handleUserInput}/>
         <ProductTable 
-          products={this.props.products} 
+          products={PRODUCTS.sort(this.sortCategory)} 
           filterText={this.state.filterText}
           inStockOnly={this.state.inStockOnly}/>
       </div>
@@ -132,11 +153,16 @@ var PRODUCTS = [
   {category: 'Sporting Goods', price: '$29.99', stocked: false, name: 'Basketball'},
   {category: 'Electronics', price: '$99.99', stocked: true, name: 'iPod Touch'},
   {category: 'Electronics', price: '$399.99', stocked: false, name: 'iPhone 5'},
-  {category: 'Electronics', price: '$199.99', stocked: true, name: 'Nexus 7'}
+  {category: 'Electronics', price: '$199.99', stocked: true, name: 'Nexus 7'},
 ]
 
+function quantify(product){
+  PRODUCTS = PRODUCTS.concat(product);
+}
+
 ReactDOM.render(
-  <FilterableProductTable products={PRODUCTS} />,
+  <FilterableProductTable onAdd={(z) => quantify(z)} />,
   document.getElementById('root')
 )
+
 
