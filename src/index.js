@@ -37,7 +37,6 @@ class ProductTable extends React.Component {
       }
       if(product.category !== lastCategory){
         rows.push(<ProductCategoryRow category={product.category} key={product.category} />);
-        console.log(rows);
       }
       rows.push(<ProductRow product={product} key={product.name}/>);
       lastCategory = product.category;
@@ -96,55 +95,181 @@ render(){
 
 class FilterableProductTable extends React.Component {
   constructor(props){
-    super(props);
-
-    this.state = {
-      filterText: '',
-      inStockOnly: false,
-      addProduct: [{category: 'Sporting Goods', price: '$5.99', stocked: true, name: 'Soccerball'},]
-    }
-
-    this.handleUserInput = this.handleUserInput.bind(this);
+  	super(props);
   }
-
-  handleUserInput(filterText, inStockOnly){
-    this.setState({
-      filterText: filterText,
-      inStockOnly: inStockOnly
-    })
-  }
-
-  componentWillMount(){
-  	const addProduct = this.state.addProduct.slice();
-  	this.props.onAdd(addProduct[addProduct.length - 1]);
-  }
-
-  sortCategory(a,b){
-    var catA = a.category.toLowerCase();
-    var catB = b.category.toLowerCase();
-    if(catA < catB){
-      return 1
-    }
-    if (catA > catB){
-      return -1
-    }
-      return 0
-   }
-  
   render(){
     return(
       <div>
         <SearchBar 
-          filterText={this.state.filterText}
-          inStockOnly={this.state.inStockOnly}
-          onUserInput={this.handleUserInput}/>
+          filterText={this.props.filterText}
+          inStockOnly={this.props.inStockOnly}
+          onUserInput={this.props.onUserInput}/>
         <ProductTable 
-          products={PRODUCTS.sort(this.sortCategory)} 
-          filterText={this.state.filterText}
-          inStockOnly={this.state.inStockOnly}/>
+          products={this.props.products} 
+          filterText={this.props.filterText}
+          inStockOnly={this.props.inStockOnly}/>
       </div>
     )
   }
+}
+
+class NewInventoryItemsForm extends React.Component {
+	constructor(props){
+		super(props);
+		/*this.state = {
+		  category: ,
+	  	  price: ,
+	  	  stocked: ,
+	  	  name: ,
+		};*/
+		this.handleChange = this.handleChange.bind(this);
+	}
+
+	handleChange(){
+		//const stockedToggle = this.newStocked.checked === false ? false : true;
+		this.props.onFormChange(
+			this.newName.value,
+			this.newCategory.value,
+			this.newPrice.value,
+			//stockedToggle
+		)
+	}
+
+
+/*newName, newCategory, newPrice, newStocked*/
+	render(){
+		return(
+			<form onSubmit={this.props.onSubmit}>
+				<label>
+					{'Name:'}
+					<input 
+					  type="text"
+					  value={this.props.nameVal}
+					  ref={(input) => this.newName = input}
+					  onChange={this.handleChange}/>
+				</label>
+				<br/>
+				<label>
+				  {'Category: '}
+				  <select id="selector"
+				    value={this.props.categoryVal} 
+				    onChange={this.handleChange} 
+				    ref={(input) => this.newCategory = input}>
+				    <option value="other">Other</option>
+				  	<option value="electronics">Electronics</option>
+					<option value="Sporting Goods">Sporting Goods</option>
+					<option value="groceries">Groceries</option>
+					<option value="furniture">Furniture</option>
+				  </select>
+				</label>
+				<label>
+				  <br/>
+					{'Price: $'}
+					<input 
+					  type="text" 
+					  placeholder="10.99"
+					  value={this.props.priceVal}
+					  onChange={this.handleChange}
+					  ref={(input) => this.newPrice = input}/>
+				</label>
+				<br/>
+				
+				<br/>
+				<button>Add</button>
+			</form>
+		)
+	}
+}
+
+class InventoryApp extends React.Component {
+	constructor(props){
+		super(props);
+
+		this.state = {
+          filterText: '',
+          inStockOnly: false,
+          addProduct: [],
+          newProduct: {category: 'other', price: '', stocked: true, name: ''}
+        };
+
+        this.handleUserInput = this.handleUserInput.bind(this);
+        this.handleFormChange = this.handleFormChange.bind(this);
+        this.handleSubmit = this.handleSubmit.bind(this);
+        this.sortCategory = this.sortCategory.bind(this);
+	}
+
+	handleFormChange(newName, newCategory, newPrice, newStocked){
+	  var newItem = {
+	  	category: newCategory,
+	  	price: newPrice,
+	  	stocked: true,
+	  	name: newName,
+	  }
+	  this.setState({
+	  	newProduct: newItem
+	  })
+	  
+	}
+
+	handleSubmit(e){
+		e.preventDefault();
+		this.setState({
+			addProduct: this.state.addProduct.push(this.state.newProduct),
+			newProduct: {}
+		})
+		if (this.state.addProduct){
+				const addProduct = this.state.addProduct.slice();
+		  	    this.props.onAddNewProduct(addProduct[0]);
+		  	    this.setState({addProduct: []})
+		  	}
+	}
+
+
+	handleUserInput(filterText, inStockOnly){
+      this.setState({
+        filterText: filterText,
+        inStockOnly: inStockOnly
+      })
+    }
+
+     //add category sort on PRODUCTS array
+      sortCategory(a,b){
+        var catA = a.category.toLowerCase();
+        var catB = b.category.toLowerCase();
+        if(catA < catB){
+        	console.log("sorting first");
+          return 1
+        }
+        console.log("sorting second");
+        if (catA > catB){
+          return -1
+        }
+        console.log("******");
+          return 0
+      } 
+
+	render(){
+      return(
+      	<div>
+      		<h3>{'Inventory'}</h3>
+      		<NewInventoryItemsForm 
+      		  onSubmit={this.handleSubmit}
+      		  onFormChange={this.handleFormChange}
+      		  categoryVal={this.state.newProduct.category}
+      		  priceVal={this.state.newProduct.price}
+      		  stockedVal={this.state.newProduct.stocked}
+      		  nameVal={this.state.newProduct.name}
+      		/>
+      		<br/>
+      		<FilterableProductTable
+      		  filterText={this.state.filterText}
+      		  inStockOnly={this.state.inStockOnly}
+      		  onUserInput={this.handleUserInput}
+      		  products={PRODUCTS.sort(this.sortCategory)}
+      		/>
+      	</div>
+	  )
+	}
 }
 
 var PRODUCTS = [
@@ -161,7 +286,7 @@ function quantify(product){
 }
 
 ReactDOM.render(
-  <FilterableProductTable onAdd={(z) => quantify(z)} />,
+  <InventoryApp onAddNewProduct={(z) => quantify(z)} />,
   document.getElementById('root')
 )
 
