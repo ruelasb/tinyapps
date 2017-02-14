@@ -3,63 +3,6 @@ import ReactDOM from 'react-dom';
 import App from './App';
 import './index.css';
 
-var PRODUCTS = [
-  {category: 'Sporting Goods', price: '$49.99', stocked: true, name: 'Football'},
-  {category: 'Sporting Goods', price: '$9.99', stocked: true, name: 'Baseball'},
-  {category: 'Sporting Goods', price: '$29.99', stocked: false, name: 'Basketball'},
-  {category: 'Electronics', price: '$99.99', stocked: true, name: 'iPod Touch'},
-  {category: 'Electronics', price: '$399.99', stocked: false, name: 'iPhone 5'},
-  {category: 'Electronics', price: '$199.99', stocked: true, name: 'Nexus 7'},
-]
-
-function merge(left, right, arr) {
-    
-  var a=0;
-    
-  while (left.length && right.length)
-    arr[a++] = right[0].category < left[0].category ? right.shift() : left.shift();
-    
-  while (left.length) arr[a++]=left.shift();
-  while (right.length) arr[a++]=right.shift();
-    
-    return arr;
-}
-
-
-function mSort(arr, tmp, l) {
-    
-  if(l==1) return;
-    
-  var m = Math.floor(l/2),
-    tmp_l = tmp.slice(0,m),
-    tmp_r = tmp.slice(m);
-    
-    // Note: just uncomment these two lines to make the classic mergeSort work again.
-    //
-   mSort(tmp_l, arr.slice(0,m), m);
-   mSort(tmp_r, arr.slice(m), l-m);
-
-    // Note: just uncomment these two lines to make a "mergequick" implementation.
-    //
-    //tmp_l = quickSort(arr.slice(0,m));
-    //tmp_r = quickSort(arr.slice(m));
-    
-  return merge(tmp_l, tmp_r, arr);
-}
-
-/**
-* The mergesort prep and call in a one-line function.  Taken from: http://rosettacode.org/wiki/Sorting_algorithms/Merge_sort#JavaScript
-*/
-function mergeSort(arr){
-  return mSort(arr, arr.slice(), arr.length);
-}
-
-
-function quantify(product){
-  PRODUCTS = PRODUCTS.concat(product);
-}
-
-/*--------------------*/
 
 class ProductCategoryRow extends React.Component {
   render(){
@@ -207,7 +150,7 @@ class NewInventoryItemsForm extends React.Component {
 	render(){
 		return(
 			<form onSubmit={(e) => {this.props.onSubmit(e,this.state.newProduct)}}>
-				{this.props.duplicationCheck ? (<p style={{color: 'red'}}>Item already on file.</p>) : null}
+				{this.props.duplicationCheck ? (<p style={{color: 'red'}}>Items can not be duplicated or without name value.</p>) : null}
 				<label>
 					{'Name:'}
 					<input 
@@ -254,7 +197,8 @@ class InventoryApp extends React.Component {
 		super(props);
 
 		this.state = {
-          addProduct: [],
+          PRODUCTS: [{category: 'Sporting Goods', price: '$49.99', stocked: true, name: 'Football'}, 
+                     {category: 'Electronics', price: '$199.99', stocked: true, name: 'Nexus 7'}],
           isProductDuplicated: false,
         };
 
@@ -265,8 +209,10 @@ class InventoryApp extends React.Component {
 		e.preventDefault();
 		var newProduct = newProduct.slice();
 		var isProductDuplicated = false;
+    var PRODUCTS = this.state.PRODUCTS;
+    //loop to search if the newProduct that is being added already exists.
 		var searchProductNames = PRODUCTS.forEach((product) => {
-			if(newProduct[0].name === product.name){
+			if(newProduct[0].name === product.name || newProduct[0].name == 0){
 				this.setState({isProductDuplicated: true})
 				return isProductDuplicated = true
 				/*Note: You will not get the updated value of state just after calling 
@@ -278,13 +224,13 @@ class InventoryApp extends React.Component {
 		});
 		if (!isProductDuplicated){
 		  this.setState({
-			addProduct: this.state.addProduct.push(newProduct),
+			PRODUCTS: this.state.PRODUCTS.concat(newProduct),
 		  })
-		  if (this.state.addProduct){
+		  /*if (this.state.addProduct){
  			  const addProduct = this.state.addProduct.slice();
 		    this.props.onAddNewProduct(addProduct[0]);
 	 	    this.setState({addProduct: []})
-		  }
+		  }*/
 		  this.setState({isProductDuplicated: false})
 		  isProductDuplicated = false;
 		}		
@@ -302,18 +248,53 @@ class InventoryApp extends React.Component {
       		/>
       		<br/>
       		<FilterableProductTable
-      		  products={mergeSort(PRODUCTS)}
+      		  products={mergeSort(this.state.PRODUCTS)}
       		/>
       	</div>
 	  )
 	}
 }
 
-
-
 ReactDOM.render(
-  <InventoryApp onAddNewProduct={(z) => quantify(z)} />,
+  <InventoryApp />,
   document.getElementById('root')
-)
+);
+
+/*---------------------------*/
+
+function merge(left, right, arr) {
+    
+  var a=0;
+    
+  while (left.length && right.length)
+    arr[a++] = right[0].category < left[0].category ? right.shift() : left.shift();
+    
+  while (left.length) arr[a++]=left.shift();
+  while (right.length) arr[a++]=right.shift();
+    
+    return arr;
+}
+
+
+function mSort(arr, tmp, l) {
+    
+  if(l==1) return;
+    
+  var m = Math.floor(l/2),
+    tmp_l = tmp.slice(0,m),
+    tmp_r = tmp.slice(m);
+    
+
+   mSort(tmp_l, arr.slice(0,m), m);
+   mSort(tmp_r, arr.slice(m), l-m);
+
+    
+  return merge(tmp_l, tmp_r, arr);
+}
+
+
+function mergeSort(arr){
+  return mSort(arr, arr.slice(), arr.length);
+}
 
 
