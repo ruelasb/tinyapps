@@ -3,7 +3,63 @@ import ReactDOM from 'react-dom';
 import App from './App';
 import './index.css';
 
+var PRODUCTS = [
+  {category: 'Sporting Goods', price: '$49.99', stocked: true, name: 'Football'},
+  {category: 'Sporting Goods', price: '$9.99', stocked: true, name: 'Baseball'},
+  {category: 'Sporting Goods', price: '$29.99', stocked: false, name: 'Basketball'},
+  {category: 'Electronics', price: '$99.99', stocked: true, name: 'iPod Touch'},
+  {category: 'Electronics', price: '$399.99', stocked: false, name: 'iPhone 5'},
+  {category: 'Electronics', price: '$199.99', stocked: true, name: 'Nexus 7'},
+]
 
+function merge(left, right, arr) {
+    
+  var a=0;
+    
+  while (left.length && right.length)
+    arr[a++] = right[0].category < left[0].category ? right.shift() : left.shift();
+    
+  while (left.length) arr[a++]=left.shift();
+  while (right.length) arr[a++]=right.shift();
+    
+    return arr;
+}
+
+
+function mSort(arr, tmp, l) {
+    
+  if(l==1) return;
+    
+  var m = Math.floor(l/2),
+    tmp_l = tmp.slice(0,m),
+    tmp_r = tmp.slice(m);
+    
+    // Note: just uncomment these two lines to make the classic mergeSort work again.
+    //
+   mSort(tmp_l, arr.slice(0,m), m);
+   mSort(tmp_r, arr.slice(m), l-m);
+
+    // Note: just uncomment these two lines to make a "mergequick" implementation.
+    //
+    //tmp_l = quickSort(arr.slice(0,m));
+    //tmp_r = quickSort(arr.slice(m));
+    
+  return merge(tmp_l, tmp_r, arr);
+}
+
+/**
+* The mergesort prep and call in a one-line function.  Taken from: http://rosettacode.org/wiki/Sorting_algorithms/Merge_sort#JavaScript
+*/
+function mergeSort(arr){
+  return mSort(arr, arr.slice(), arr.length);
+}
+
+
+function quantify(product){
+  PRODUCTS = PRODUCTS.concat(product);
+}
+
+/*--------------------*/
 
 class ProductCategoryRow extends React.Component {
   render(){
@@ -203,7 +259,6 @@ class InventoryApp extends React.Component {
         };
 
         this.handleSubmit = this.handleSubmit.bind(this);
-        this.sortCategory = this.sortCategory.bind(this);
 	}
 
 	handleSubmit(e, newProduct){
@@ -226,7 +281,7 @@ class InventoryApp extends React.Component {
 			addProduct: this.state.addProduct.push(newProduct),
 		  })
 		  if (this.state.addProduct){
- 			const addProduct = this.state.addProduct.slice();
+ 			  const addProduct = this.state.addProduct.slice();
 		    this.props.onAddNewProduct(addProduct[0]);
 	 	    this.setState({addProduct: []})
 		  }
@@ -235,21 +290,6 @@ class InventoryApp extends React.Component {
 		}		
 	}
 
-     //add category sort on PRODUCTS array
-      sortCategory(a,b){
-        var catA = a.category.toLowerCase();
-        var catB = b.category.toLowerCase();
-        if(catA < catB){
-        	console.log("sorting first");
-          return 1
-        }
-        console.log("sorting second");
-        if (catA > catB){
-          return -1
-        }
-        console.log("******");
-          return 0
-      } 
 
 	render(){
 		const duplicationCheck = this.state.isProductDuplicated;//state changes are recieved immediately inside render funciton.
@@ -262,25 +302,14 @@ class InventoryApp extends React.Component {
       		/>
       		<br/>
       		<FilterableProductTable
-      		  products={PRODUCTS.sort(this.sortCategory)}
+      		  products={mergeSort(PRODUCTS)}
       		/>
       	</div>
 	  )
 	}
 }
 
-var PRODUCTS = [
-  {category: 'Sporting Goods', price: '$49.99', stocked: true, name: 'Football'},
-  {category: 'Sporting Goods', price: '$9.99', stocked: true, name: 'Baseball'},
-  {category: 'Sporting Goods', price: '$29.99', stocked: false, name: 'Basketball'},
-  {category: 'Electronics', price: '$99.99', stocked: true, name: 'iPod Touch'},
-  {category: 'Electronics', price: '$399.99', stocked: false, name: 'iPhone 5'},
-  {category: 'Electronics', price: '$199.99', stocked: true, name: 'Nexus 7'},
-]
 
-function quantify(product){
-  PRODUCTS = PRODUCTS.concat(product);
-}
 
 ReactDOM.render(
   <InventoryApp onAddNewProduct={(z) => quantify(z)} />,
