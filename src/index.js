@@ -1,6 +1,5 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
-import App from './App';
 import './index.css';
 
 
@@ -8,7 +7,7 @@ class ProductCategoryRow extends React.Component {
   render(){
     return (
       <tr>
-        <th colSpan="2">{this.props.category}</th>
+        <th colSpan="3">{this.props.category}</th>
       </tr>
     )
   }
@@ -16,10 +15,11 @@ class ProductCategoryRow extends React.Component {
 
 class ProductRow extends React.Component {
   render(){
-    var style = this.props.product.stocked ? {color: 'none'} : {color: 'red'};
+    var style = this.props.product.stocked ? 'none' : 'danger';
     return(
-      <tr>
-        <td style={style}>{this.props.product.name}</td>
+      <tr className={style}>
+        <td></td>
+        <td>{this.props.product.name}</td>
         <td>{this.props.product.price}</td>
       </tr>
     )
@@ -42,9 +42,10 @@ class ProductTable extends React.Component {
     })
 
     return(
-      <table>
+      <table className="table table-striped">
         <thead>
           <tr>
+            <td>Category</td>
             <td>Name</td>
             <td>Price</td>
           </tr>
@@ -65,20 +66,21 @@ class SearchBar extends React.Component {
   handleChange(){
     this.props.onUserInput(
       this.filterTextInput.value,
-      this.inStockOnlyInput.checked
+      /*this.inStockOnlyInput.checked*/
     );
   }
 
 render(){
   return(
-    <form>
+    <form className="navbar-form navbar-right">
       <input 
       type="text" 
+      className="form-control"
       placeholder="Search..." 
       value={this.props.fliterText}
       ref={(input) => this.filterTextInput = input}
       onChange={this.handleChange}/>
-      <p>
+      {/*<p className="checkbox-paragraph">
         <input 
           type="checkbox" 
           checked={this.props.inStockOnly}
@@ -86,40 +88,21 @@ render(){
           onChange={this.handleChange}/>
           {' '}
           Only show products in stock
-      </p>
+      </p>*/}
     </form>
   )
 }
 }
 
 class FilterableProductTable extends React.Component {
-  constructor(props){
-  	super(props);
 
-  	this.state = {
-  	  filterText: '',
-      inStockOnly: false,
-  	}
-
-  	this.handleUserInput = this.handleUserInput.bind(this);
-  }
-  handleUserInput(filterText, inStockOnly){
-    this.setState({
-      filterText: filterText,
-      inStockOnly: inStockOnly
-    })
-  }
   render(){
     return(
       <div>
-        <SearchBar 
-          filterText={this.state.filterText}
-          inStockOnly={this.state.inStockOnly}
-          onUserInput={this.handleUserInput}/>
         <ProductTable 
           products={this.props.products} 
-          filterText={this.state.filterText}
-          inStockOnly={this.state.inStockOnly}/>
+          filterText={this.props.filterText}
+          inStockOnly={this.props.inStockOnly}/>
       </div>
     )
   }
@@ -151,18 +134,20 @@ class NewInventoryItemsForm extends React.Component {
 		return(
 			<form onSubmit={(e) => {this.props.onSubmit(e,this.state.newProduct)}}>
 				{this.props.duplicationCheck ? (<p style={{color: 'red'}}>Items can not be duplicated or without name value.</p>) : null}
-				<label>
-					{'Name:'}
+				<div className="form-group">  
+          <label>{'Name:'}</label>
 					<input 
+            className="form-control"
 					  type="text"
 					  value={this.state.nameVal}
 					  ref={(input) => this.newName = input}
 					  onChange={this.handleChange}/>
-				</label>
-				<br/>
-				<label>
-				  {'Category: '}
-				  <select id="selector"
+				</div>
+
+				<label>{'Category: '}</label>
+				  <select
+            className="form-control" 
+            id="selector"
 				    value={this.state.categoryVal} 
 				    onChange={this.handleChange} 
 				    ref={(input) => this.newCategory = input}>
@@ -172,21 +157,20 @@ class NewInventoryItemsForm extends React.Component {
 					<option value="Groceries">Groceries</option>
 					<option value="Furniture">Furniture</option>
 				  </select>
-				</label>
-				<label>
-				  <br/>
-					{'Price: $'}
+				<br/>
+				<label>{'Price:'}</label>
+        <div className="input-group">
+        <div className="input-group-addon">$</div>
 					<input 
+            className="form-control"
 					  type="text" 
-					  placeholder="10.99"
+					  placeholder="Amount"
 					  value={this.state.priceVal}
 					  onChange={this.handleChange}
 					  ref={(input) => this.newPrice = input}/>
-				</label>
+				</div>
 				<br/>
-				
-				<br/>
-				<button>Add</button>
+				<button className="btn btn-primary">Add Product</button>
 			</form>
 		)
 	}
@@ -197,12 +181,19 @@ class InventoryApp extends React.Component {
 		super(props);
 
 		this.state = {
-          PRODUCTS: [{category: 'Sporting Goods', price: '$49.99', stocked: true, name: 'Football'}, 
-                     {category: 'Electronics', price: '$199.99', stocked: true, name: 'Nexus 7'}],
-          isProductDuplicated: false,
-        };
+      filterText: '',
+      inStockOnly: false,
+      PRODUCTS: [  {category: 'Sporting Goods', price: '$49.99', stocked: true, name: 'Football'},
+                   {category: 'Sporting Goods', price: '$9.99', stocked: true, name: 'Baseball'},
+                   {category: 'Sporting Goods', price: '$29.99', stocked: false, name: 'Basketball'},
+                   {category: 'Electronics', price: '$99.99', stocked: true, name: 'iPod Touch'},
+                   {category: 'Electronics', price: '$399.99', stocked: false, name: 'iPhone 5'},
+                   {category: 'Electronics', price: '$199.99', stocked: true, name: 'Nexus 7'},],
+      isProductDuplicated: false,
+    };
 
         this.handleSubmit = this.handleSubmit.bind(this);
+        this.handleUserInput = this.handleUserInput.bind(this);
 	}
 
 	handleSubmit(e, newProduct){
@@ -236,27 +227,59 @@ class InventoryApp extends React.Component {
 		}		
 	}
 
+  handleUserInput(filterText, inStockOnly){
+    this.setState({
+      filterText: filterText,
+      inStockOnly: inStockOnly
+    })
+  }
+
 
 	render(){
 		const duplicationCheck = this.state.isProductDuplicated;//state changes are recieved immediately inside render funciton.
       return(
       	<div>
-      		<h3>{'Inventory'}</h3>
-      		<NewInventoryItemsForm 
-      		  onSubmit={(e, newProduct) => this.handleSubmit(e,newProduct)}
-      		  duplicationCheck={duplicationCheck}
-      		/>
-      		<br/>
-      		<FilterableProductTable
-      		  products={mergeSort(this.state.PRODUCTS)}
-      		/>
+            <nav className="navbar navbar-inverse navbar-fixed-top">
+      <div className="container-fluid">
+        <div className="navbar-header">
+          <a className="navbar-brand" href="#">{'Inventory App'}</a>
+        </div>
+        <div id="navbar" className="navbar-collapse collapse">
+          <SearchBar 
+          filterText={this.state.filterText}
+          inStockOnly={this.state.inStockOnly}
+          onUserInput={this.handleUserInput}/>
+        </div>
+      </div>
+    </nav>
+
+    <div className="container-fluid">
+      <div className="row">
+        <div className="col-sm-3 col-md-2 sidebar">
+            <NewInventoryItemsForm 
+              onSubmit={(e, newProduct) => this.handleSubmit(e,newProduct)}
+              duplicationCheck={duplicationCheck}
+            />
+        </div>
+        <div className="col-sm-9 col-sm-offset-3 col-md-10 col-md-offset-2 main">
+          <h1 className="sub-header">Inventory List</h1>
+          <div className="table-responsive">
+            <FilterableProductTable
+              filterText={this.state.filterText}
+              inStockOnly={this.state.inStockOnly}
+              products={mergeSort(this.state.PRODUCTS)}
+            />
+          </div>
+        </div>
+      </div>
+    </div>
       	</div>
 	  )
 	}
 }
 
 ReactDOM.render(
-  <InventoryApp />,
+  <InventoryApp/>,
   document.getElementById('root')
 );
 
