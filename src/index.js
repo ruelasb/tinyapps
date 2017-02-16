@@ -7,20 +7,40 @@ class ProductCategoryRow extends React.Component {
   render(){
     return (
       <tr>
-        <th colSpan="3">{this.props.category}</th>
+        <th colSpan="4">{this.props.category}</th>
       </tr>
     )
   }
 }
 
 class ProductRow extends React.Component {
+  constructor(props){
+    super(props);
+    this.state = {
+      itemsClicked: false
+    }
+
+    this.itemsClicked = this.itemsClicked.bind(this);
+  }
+  itemsClicked(items){
+    this.setState({
+       itemsClicked: items
+    })
+  }
   render(){
+
     var style = this.props.product.stocked ? 'none' : 'danger';
     return(
       <tr className={style}>
-        <td></td>
+        <td><input type="checkbox" onChange={(item) => this.itemsClicked(item.target.checked)}/></td>
         <td>{this.props.product.name}</td>
         <td>{this.props.product.price}</td>
+        <td>
+          {this.props.product.stocked ? 'in-stock' : 'out-of-stock'}
+          { this.state.itemsClicked ? <a href="#" style={{float: 'right'}} onClick={() => this.props.onDelete(this.props.product.name)}>
+                      <i className="fa fa-trash-o fa-lg" aria-hidden="true"></i>
+                    </a> : null}
+        </td>
       </tr>
     )
   }
@@ -37,7 +57,7 @@ class ProductTable extends React.Component {
       if(product.category !== lastCategory){
         rows.push(<ProductCategoryRow category={product.category} key={product.category} />);
       }
-      rows.push(<ProductRow product={product} key={product.name}/>);
+      rows.push(<ProductRow product={product} key={product.name} onDelete={this.props.onDelete}/>);
       lastCategory = product.category;
     })
 
@@ -48,6 +68,7 @@ class ProductTable extends React.Component {
             <td>Category</td>
             <td>Name</td>
             <td>Price</td>
+            <td>Stocked</td>
           </tr>
         </thead>
         <tbody>{rows}</tbody>
@@ -66,7 +87,7 @@ class SearchBar extends React.Component {
   handleChange(){
     this.props.onUserInput(
       this.filterTextInput.value,
-      /*this.inStockOnlyInput.checked*/
+      this.inStockOnlyInput.checked
     );
   }
 
@@ -80,7 +101,7 @@ render(){
       value={this.props.fliterText}
       ref={(input) => this.filterTextInput = input}
       onChange={this.handleChange}/>
-      {/*<p className="checkbox-paragraph">
+      <p className="checkbox-paragraph">
         <input 
           type="checkbox" 
           checked={this.props.inStockOnly}
@@ -88,7 +109,7 @@ render(){
           onChange={this.handleChange}/>
           {' '}
           Only show products in stock
-      </p>*/}
+      </p>
     </form>
   )
 }
@@ -102,7 +123,8 @@ class FilterableProductTable extends React.Component {
         <ProductTable 
           products={this.props.products} 
           filterText={this.props.filterText}
-          inStockOnly={this.props.inStockOnly}/>
+          inStockOnly={this.props.inStockOnly}
+          onDelete={this.props.onDelete}/>
       </div>
     )
   }
@@ -120,7 +142,7 @@ class NewInventoryItemsForm extends React.Component {
 	handleChange(){
 		var newItem = {
 	  	  category: this.newCategory.value,
-	  	  price: this.newPrice.value,
+	  	  price: this.newPrice.value.indexOf('$') === -1 ? '$' + this.newPrice.value : this.newPrice.value,
 	  	  stocked: true,
 	  	  name: this.newName.value,
 	    }
@@ -132,6 +154,8 @@ class NewInventoryItemsForm extends React.Component {
 /*newName, newCategory, newPrice, newStocked*/
 	render(){
 		return(
+      <div>
+      <h3 style={{marginTop: "0px"}}>New Product</h3>
 			<form onSubmit={(e) => {this.props.onSubmit(e,this.state.newProduct)}}>
 				{this.props.duplicationCheck ? (<p style={{color: 'red'}}>Items can not be duplicated or without name value.</p>) : null}
 				<div className="form-group">  
@@ -172,6 +196,7 @@ class NewInventoryItemsForm extends React.Component {
 				<br/>
 				<button className="btn btn-primary">Add Product</button>
 			</form>
+      </div>
 		)
 	}
 }
@@ -193,7 +218,8 @@ class InventoryApp extends React.Component {
     };
 
         this.handleSubmit = this.handleSubmit.bind(this);
-        this.handleUserInput = this.handleUserInput.bind(this);
+        this.handleSearchInput = this.handleSearchInput.bind(this);
+        this.handleOnDelete = this.handleOnDelete.bind(this);
 	}
 
 	handleSubmit(e, newProduct){
@@ -208,7 +234,7 @@ class InventoryApp extends React.Component {
 				return isProductDuplicated = true
 				/*Note: You will not get the updated value of state just after calling 
 				it, therefore, var isProductDuplicated will hold the immediate changes. 
-				The updated state change is checked and recieved immediately inside 
+				The updated state change is checked and recieved immesdiately inside 
 				the render function */
 			}
 			return null
@@ -227,11 +253,23 @@ class InventoryApp extends React.Component {
 		}		
 	}
 
-  handleUserInput(filterText, inStockOnly){
+  handleSearchInput(filterText, inStockOnly){
     this.setState({
       filterText: filterText,
       inStockOnly: inStockOnly
     })
+  }
+
+  handleOnDelete(itemToDelete){
+    var newProductList = [];
+    this.state.PRODUCTS.forEach((product) => {
+      if(product.name !== itemToDelete){
+        newProductList.push(product);
+      }
+    })
+    this.setState({
+      PRODUCTS: newProductList
+    });
   }
 
 
@@ -248,7 +286,7 @@ class InventoryApp extends React.Component {
           <SearchBar 
           filterText={this.state.filterText}
           inStockOnly={this.state.inStockOnly}
-          onUserInput={this.handleUserInput}/>
+          onUserInput={this.handleSearchInput}/>
         </div>
       </div>
     </nav>
@@ -260,6 +298,7 @@ class InventoryApp extends React.Component {
               onSubmit={(e, newProduct) => this.handleSubmit(e,newProduct)}
               duplicationCheck={duplicationCheck}
             />
+            <hr style={{borderTop: '1px solid #ccc'}}/>
         </div>
         <div className="col-sm-9 col-sm-offset-3 col-md-10 col-md-offset-2 main">
           <h1 className="sub-header">Inventory List</h1>
@@ -268,6 +307,7 @@ class InventoryApp extends React.Component {
               filterText={this.state.filterText}
               inStockOnly={this.state.inStockOnly}
               products={mergeSort(this.state.PRODUCTS)}
+              onDelete={(item) => {this.handleOnDelete(item)}}
             />
           </div>
         </div>
@@ -301,7 +341,7 @@ function merge(left, right, arr) {
 
 function mSort(arr, tmp, l) {
     
-  if(l==1) return;
+  if(l<=1) return arr;
     
   var m = Math.floor(l/2),
     tmp_l = tmp.slice(0,m),
