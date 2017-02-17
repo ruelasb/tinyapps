@@ -17,29 +17,37 @@ class ProductRow extends React.Component {
   constructor(props){
     super(props);
     this.state = {
-      itemsClicked: false
+      itemChecked: false
     }
 
-    this.itemsClicked = this.itemsClicked.bind(this);
+    this.itemChecked = this.itemChecked.bind(this);
   }
-  itemsClicked(items){
+  itemChecked(item){
+    this.props.itemClicked(item);
     this.setState({
-       itemsClicked: items
-    })
+       itemChecked: item.checked
+    });
   }
   render(){
 
     var style = this.props.product.stocked ? 'none' : 'danger';
     return(
       <tr className={style}>
-        <td><input type="checkbox" onChange={(item) => this.itemsClicked(item.target.checked)}/></td>
+        <td>
+          <input type="checkbox" 
+                 onChange={(item) => {this.itemChecked(item.target)}}/>
+        </td>
         <td>{this.props.product.name}</td>
         <td>{this.props.product.price}</td>
         <td>
           {this.props.product.stocked ? 'in-stock' : 'out-of-stock'}
-          { this.state.itemsClicked ? <a href="#" style={{float: 'right'}} onClick={() => this.props.onDelete(this.props.product.name)}>
-                      <i className="fa fa-trash-o fa-lg" aria-hidden="true"></i>
-                    </a> : null}
+          { this.state.itemChecked
+            ? 
+              <a href="#" style={{float: 'right'}} onClick={() => this.props.itemDelete(this.props.product.name)}>
+                <i style={{color: 'gray'}} className="fa fa-trash-o fa-lg" aria-hidden="true"></i>
+              </a> 
+            : null
+          }
         </td>
       </tr>
     )
@@ -47,6 +55,32 @@ class ProductRow extends React.Component {
 }
 
 class ProductTable extends React.Component {
+  constructor(props){
+    super(props);
+
+    this.state = {
+      toBeDeleted: []
+    }
+
+    this.itemsChecked = this.itemsChecked.bind(this);
+    this.onBulkBtn = this.onBulkBtn.bind(this);
+  }
+
+  itemsChecked(checkbox, product){
+    var toBeDeleted = this.state.toBeDeleted.slice();
+    if(checkbox.checked === true && toBeDeleted.indexOf(product.name) === -1){
+       this.setState({toBeDeleted: this.state.toBeDeleted.concat(product.name)})
+    }else if (checkbox.checked === false){
+       toBeDeleted.splice(toBeDeleted.indexOf(product.name), 1);
+       this.setState({toBeDeleted: toBeDeleted})
+    };
+  }
+
+  onBulkBtn(e){
+    this.state.toBeDeleted.length ? this.props.bulkDelete(this.state.toBeDeleted) : console.log('Button Clicked');
+    this.setState({toBeDeleted: []})
+  }
+
   render(){
     var rows = [];
     var lastCategory = null;
@@ -57,22 +91,36 @@ class ProductTable extends React.Component {
       if(product.category !== lastCategory){
         rows.push(<ProductCategoryRow category={product.category} key={product.category} />);
       }
-      rows.push(<ProductRow product={product} key={product.name} onDelete={this.props.onDelete}/>);
+      rows.push(<ProductRow product={product} 
+                            key={product.name} 
+                            itemDelete={this.props.itemDelete} 
+                            itemClicked={(item) => {this.itemsChecked(item, product)}}/>);
       lastCategory = product.category;
     })
-
+    var stateDelete = this.state.toBeDeleted;
     return(
+      <div>
       <table className="table table-striped">
         <thead>
           <tr>
             <td>Category</td>
             <td>Name</td>
             <td>Price</td>
-            <td>Stocked</td>
+            <td>
+              Stocked
+              {this.state.toBeDeleted.length > 1 
+                ? 
+                  <a href="#" style={{float: 'right', textDecoration: 'none'}} id="BulkBtn" onClick={this.onBulkBtn}>
+                    <i className="fa fa-trash-o fa-lg" aria-hidden="true"></i>
+                  </a> 
+                : null
+              }
+            </td>
           </tr>
         </thead>
         <tbody>{rows}</tbody>
       </table>
+      </div>
     )
   }
 }
@@ -124,7 +172,8 @@ class FilterableProductTable extends React.Component {
           products={this.props.products} 
           filterText={this.props.filterText}
           inStockOnly={this.props.inStockOnly}
-          onDelete={this.props.onDelete}/>
+          itemDelete={this.props.itemDelete}
+          bulkDelete={this.props.bulkDelete}/>
       </div>
     )
   }
@@ -215,11 +264,13 @@ class InventoryApp extends React.Component {
                    {category: 'Electronics', price: '$399.99', stocked: false, name: 'iPhone 5'},
                    {category: 'Electronics', price: '$199.99', stocked: true, name: 'Nexus 7'},],
       isProductDuplicated: false,
+      toBeRemoved: [],
     };
 
         this.handleSubmit = this.handleSubmit.bind(this);
         this.handleSearchInput = this.handleSearchInput.bind(this);
-        this.handleOnDelete = this.handleOnDelete.bind(this);
+        this.handleItemDelete = this.handleItemDelete.bind(this);
+        this.onBulkDelete = this.onBulkDelete.bind(this);
 	}
 
 	handleSubmit(e, newProduct){
@@ -240,15 +291,7 @@ class InventoryApp extends React.Component {
 			return null
 		});
 		if (!isProductDuplicated){
-		  this.setState({
-			PRODUCTS: this.state.PRODUCTS.concat(newProduct),
-		  })
-		  /*if (this.state.addProduct){
- 			  const addProduct = this.state.addProduct.slice();
-		    this.props.onAddNewProduct(addProduct[0]);
-	 	    this.setState({addProduct: []})
-		  }*/
-		  this.setState({isProductDuplicated: false})
+		  this.setState({PRODUCTS: this.state.PRODUCTS.concat(newProduct), isProductDuplicated: false});
 		  isProductDuplicated = false;
 		}		
 	}
@@ -260,7 +303,7 @@ class InventoryApp extends React.Component {
     })
   }
 
-  handleOnDelete(itemToDelete){
+  handleItemDelete(itemToDelete){
     var newProductList = [];
     this.state.PRODUCTS.forEach((product) => {
       if(product.name !== itemToDelete){
@@ -272,6 +315,15 @@ class InventoryApp extends React.Component {
     });
   }
 
+  onBulkDelete(bulk){
+    console.log('onBulkDelete function');
+    var trueBulk = [];
+    this.state.PRODUCTS.forEach((product) => {
+        if(bulk.indexOf(product.name) !== -1){ return }
+        trueBulk.push(product)
+    })
+    this.setState({PRODUCTS: trueBulk})
+  }
 
 	render(){
 		const duplicationCheck = this.state.isProductDuplicated;//state changes are recieved immediately inside render funciton.
@@ -307,7 +359,8 @@ class InventoryApp extends React.Component {
               filterText={this.state.filterText}
               inStockOnly={this.state.inStockOnly}
               products={mergeSort(this.state.PRODUCTS)}
-              onDelete={(item) => {this.handleOnDelete(item)}}
+              itemDelete={(item) => {this.handleItemDelete(item)}}
+              bulkDelete={(bulk) => {this.onBulkDelete(bulk)}}
             />
           </div>
         </div>
