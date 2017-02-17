@@ -41,13 +41,13 @@ class ProductRow extends React.Component {
         <td>{this.props.product.price}</td>
         <td>
           {this.props.product.stocked ? 'in-stock' : 'out-of-stock'}
-          { this.state.itemChecked
+          {/* this.state.itemChecked
             ? 
               <a href="#" style={{float: 'right'}} onClick={() => this.props.itemDelete(this.props.product.name)}>
                 <i style={{color: 'gray'}} className="fa fa-trash-o fa-lg" aria-hidden="true"></i>
               </a> 
             : null
-          }
+          */}
         </td>
       </tr>
     )
@@ -78,13 +78,13 @@ class ProductTable extends React.Component {
 
   onBulkBtn(e){
     this.state.toBeDeleted.length ? this.props.bulkDelete(this.state.toBeDeleted) : console.log('Button Clicked');
-    this.setState({toBeDeleted: []})
+    this.setState({toBeDeleted: []});
   }
 
   render(){
     var rows = [];
     var lastCategory = null;
-    this.props.products.forEach((product) => {
+    this.props.products.length ? this.props.products.forEach((product) => {
       if(product.name.toLowerCase().indexOf(this.props.filterText.toLowerCase()) === -1 || (!product.stocked && this.props.inStockOnly)){
         return;
       }
@@ -96,8 +96,7 @@ class ProductTable extends React.Component {
                             itemDelete={this.props.itemDelete} 
                             itemClicked={(item) => {this.itemsChecked(item, product)}}/>);
       lastCategory = product.category;
-    })
-    var stateDelete = this.state.toBeDeleted;
+    }) : rows.push(<tr><th colSpan="4">{'Inventory list is empty or can not be found. Please make a new list!'}</th></tr>)
     return(
       <div>
       <table className="table table-striped">
@@ -108,7 +107,7 @@ class ProductTable extends React.Component {
             <td>Price</td>
             <td>
               Stocked
-              {this.state.toBeDeleted.length > 1 
+              {this.state.toBeDeleted.length >= 1 
                 ? 
                   <a href="#" style={{float: 'right', textDecoration: 'none'}} id="BulkBtn" onClick={this.onBulkBtn}>
                     <i className="fa fa-trash-o fa-lg" aria-hidden="true"></i>
@@ -118,7 +117,9 @@ class ProductTable extends React.Component {
             </td>
           </tr>
         </thead>
-        <tbody>{rows}</tbody>
+        <tbody>
+        {rows}
+        </tbody>
       </table>
       </div>
     )
