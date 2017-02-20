@@ -184,7 +184,7 @@ class NewInventoryItemsForm extends React.Component {
 	constructor(props){
 		super(props);
 		this.state = {
-		  newProduct: []
+		  newProduct: [{category: null, price: null, stocked: null, name: false}]
 		};
 		this.handleChange = this.handleChange.bind(this);
 	}
@@ -193,7 +193,7 @@ class NewInventoryItemsForm extends React.Component {
 		var newItem = {
 	  	  category: this.newCategory.value,
 	  	  price: this.newPrice.value.indexOf('$') === -1 ? '$' + this.newPrice.value : this.newPrice.value,
-	  	  stocked: true,
+	  	  stocked: this.newStocked.value === "true" ? true : false,
 	  	  name: this.newName.value,
 	    }
 		this.setState({
@@ -221,15 +221,14 @@ class NewInventoryItemsForm extends React.Component {
 				<label>{'Category: '}</label>
 				  <select
             className="form-control" 
-            id="selector"
 				    value={this.state.categoryVal} 
 				    onChange={this.handleChange} 
 				    ref={(input) => this.newCategory = input}>
 				    <option value="Other">Other</option>
 				  	<option value="Electronics">Electronics</option>
-					<option value="Sporting Goods">Sporting Goods</option>
-					<option value="Groceries">Groceries</option>
-					<option value="Furniture">Furniture</option>
+					  <option value="Sporting Goods">Sporting Goods</option>
+					  <option value="Groceries">Groceries</option>
+					  <option value="Furniture">Furniture</option>
 				  </select>
 				<br/>
 				<label>{'Price:'}</label>
@@ -243,6 +242,16 @@ class NewInventoryItemsForm extends React.Component {
 					  onChange={this.handleChange}
 					  ref={(input) => this.newPrice = input}/>
 				</div>
+        <br/>
+        <label>{'Stocked: '}</label>
+        <select
+          className="form-control"
+          value={this.state.stocked}
+          onChange={this.handleChange}
+          ref={(input) => this.newStocked = input}>
+          <option value='true'>in-stock</option>
+          <option value='false'>out-of-stock</option>
+        </select>
 				<br/>
 				<button className="btn btn-primary">Add Product</button>
 			</form>
