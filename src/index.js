@@ -342,7 +342,7 @@ class InventoryApp extends React.Component {
             <nav className="navbar navbar-inverse navbar-fixed-top">
       <div className="container-fluid">
         <div className="navbar-header">
-          <a className="navbar-brand" href="#">{'Inventory App'}</a>
+          <a className="navbar-brand" href="#">{'Inventory App | Bryant Ruelas Design'}</a>
         </div>
         <div id="navbar" className="navbar-collapse collapse">
           <SearchBar 
