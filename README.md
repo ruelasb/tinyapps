@@ -1,4 +1,4 @@
-This project was bootstrapped with [Create React App](https://github.com/facebookincubator/create-react-app).
+This project was bootstrapped with [Create React App](https://github.com/facebookincubator/create-react-app) and can be found [here](https://bryantruelas.com/inventoryapp).
 
 # Inventory App
 
