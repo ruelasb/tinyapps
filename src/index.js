@@ -4,6 +4,9 @@ import './index.css';
 
 
 class ProductCategoryRow extends React.Component {
+  shouldComponentUpdate(){
+    return false
+  }
   render(){
     return (
       <tr>
@@ -22,6 +25,7 @@ class ProductRow extends React.Component {
 
     this.itemChecked = this.itemChecked.bind(this);
   }
+
   itemChecked(item){
     this.props.itemClicked(item);
     this.setState({
